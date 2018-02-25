@@ -27,8 +27,8 @@ import multiprocessing as mp
 import numpy as np
 import scipy.interpolate as si
 
-import tools
-import cc2d
+from . import tools
+from . import cc2d
 
 def track(img1, img2,
         sub_px=True, missing=None, cc_function='dft', cc_boundary='wrap'):
