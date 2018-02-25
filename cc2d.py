@@ -27,6 +27,8 @@ The cross-correlation returned by the method is:
 import numpy as np
 import scipy.signal as ss
 
+from . import tools
+
 def _prep_for_cc(img1, img2):
     ''' Prepare img1 and img2 for cross correlation computation:
     - set average to 0
