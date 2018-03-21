@@ -171,14 +171,14 @@ def explicit_step(a1, a2, i, j, norm=None):
     cc : float
         The cross-correlation of a1 with a2 for shift (i, j)
     '''
-    nx, ny = a1.shape
+    ni, nj = a1.shape
     s1 = (
-        slice(max(i, 0), min(nx+i-1, nx-1) + 1),
-        slice(max(j, 0), min(ny+j-1, ny-1) + 1)
+        slice(max(i, 0), min(ni+i-1, ni-1) + 1),
+        slice(max(j, 0), min(nj+j-1, nj-1) + 1)
         )
     s2 = (
-        slice(max(-i, 0), min(nx-i-1, nx-1) + 1),
-        slice(max(-j, 0), min(ny-j-1, ny-1) + 1)
+        slice(max(-i, 0), min(ni-i-1, ni-1) + 1),
+        slice(max(-j, 0), min(nj-j-1, nj-1) + 1)
         )
     a1 = a1[s1]
     a2 = a2[s2]
@@ -188,15 +188,15 @@ def explicit_step(a1, a2, i, j, norm=None):
 
     return np.sum(a1 * a2) / norm
 
-def explicit(img1, img2, sxmax=None, symax=None, boundary='fill'):
+def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
     ''' Compute the cross-correlation of img1 and img2 using explicit
     multiplication in the real space.
 
     Parameters
     ==========
     img1, img2 : ndarray
-    sxmax, symax : int or None (default: None)
-        The maximum shift on the x and y axes resp. for which to compute the
+    simax, sjmax : int or None (default: None)
+        The maximum shift on the 0 and 1 axes resp. for which to compute the
         cross-correlation.
         If None, compute the cross correlation over the full shift domain.
     boundary : 'fill' or 'drop' (default: 'fill')
@@ -204,11 +204,11 @@ def explicit(img1, img2, sxmax=None, symax=None, boundary='fill'):
         images with zeros. With 'drop' the cross-correlation is computing using
         only the overlapping part of the images.
     '''
-    ny, nx = img1.shape
-    if sxmax is None:
-        sxmax = nx
-    if symax is None:
-        symax = ny
+    ni, nj = img1.shape
+    if simax is None:
+        simax = ni - 1
+    if sjmax is None:
+        sjmax = nj - 1
 
     if boundary == 'fill':
         img1, img2, norm = _prep_for_cc(img1, img2)
@@ -218,10 +218,10 @@ def explicit(img1, img2, sxmax=None, symax=None, boundary='fill'):
         msg = "unexpected value for 'boundary': {}".format(boundary)
         raise ValueError(msg)
 
-    cc = np.zeros((2 * sxmax + 1, 2 * symax + 1))
-    for i in range(-sxmax, sxmax + 1):
-        for j in range(-symax, symax + 1):
-            cc[sxmax + i, symax + j] = explicit_step(
+    cc = np.zeros((2 * simax + 1, 2 * sjmax + 1))
+    for i in range(-simax, simax + 1):
+        for j in range(-sjmax, sjmax + 1):
+            cc[simax + i, sjmax + j] = explicit_step(
                 img1, img2, i, j, norm=norm)
 
     cc = tools.roll_2d(cc)
