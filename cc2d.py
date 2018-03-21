@@ -142,7 +142,49 @@ def _unpad_array(arr, s, roll=False):
         arr = arr[s]
     return arr
 
-def explicit(img1, img2, sxmax, symax):
+def explicit_step(a1, a2, i, j, norm=None):
+    ''' Compute the explicit cross-correlation between two arrays for a given
+    shift.
+
+    Parameters
+    ==========
+    a1, a2 : ndarray, 2D
+        Data values.
+    i, j : int
+        The shift between a1 and a2 for which to compute the cross-correlation.
+    norm : float or None (default: None)
+        The value by which to normalize the result.
+        If None, subtract their respective averages from the shifted version of
+        a1 and a2:
+            I = s_a1 - avg(s_a1); J = s_a2 - avg(s_a2),
+        and compute a local norm:
+            norm = sqrt(sum(I²) × sum(J²)).
+        This is used to implement boundary='drop' when computing an explicit
+        DFT map.
+
+    Returns
+    =======
+    cc : float
+        The cross-correlation of a1 with a2 for shift (i, j)
+    '''
+    nx, ny = a1.shape
+    s1 = (
+        slice(max(i, 0), min(nx+i-1, nx-1) + 1),
+        slice(max(j, 0), min(ny+j-1, ny-1) + 1)
+        )
+    s2 = (
+        slice(max(-i, 0), min(nx-i-1, nx-1) + 1),
+        slice(max(-j, 0), min(ny-j-1, ny-1) + 1)
+        )
+    a1 = a1[s1]
+    a2 = a2[s2]
+
+    if norm is None:
+        a1, a2, norm = _prep_for_cc(a1, a2, inplace=True)
+
+    return np.sum(a1 * a2) / norm
+
+def explicit(img1, img2, sxmax, symax, boundary='fill'):
     ''' Compute the cross-correlation of img1 and img2 using explicit
     multiplication in the real space.
 
@@ -152,31 +194,26 @@ def explicit(img1, img2, sxmax, symax):
     sxmax, symax : int
         The maximum shift on the x and y axes resp. for which to compute the
         cross-correlation.
+    boundary : 'fill' or 'drop' (default: 'fill')
+        How to handle boundary conditions. 'fill' is equivalent to padding the
+        images with zeros. With 'drop' the cross-correlation is computing using
+        only the overlapping part of the images.
     '''
-    img1, img2, norm = _prep_for_cc(img1, img2)
 
-    nx, ny = img1.shape
+    if boundary == 'fill':
+        img1, img2, norm = _prep_for_cc(img1, img2)
+    elif boundary == 'drop':
+        norm = None
+    else:
+        msg = "unexpected value for 'boundary': {}".format(boundary)
+        raise ValueError(msg)
+
     cc = np.zeros((2 * sxmax + 1, 2 * symax + 1))
-
     for i in range(-sxmax, sxmax + 1):
         for j in range(-symax, symax + 1):
+            cc[sxmax + i, symax + j] = explicit_step(
+                img1, img2, i, j, norm=norm)
 
-            s1 = (
-                slice(max(i, 0), min(nx+i-1, nx-1) + 1),
-                slice(max(j, 0), min(ny+j-1, ny-1) + 1)
-                )
-            s2 = (
-                slice(max(-i, 0), min(nx-i-1, nx-1) + 1),
-                slice(max(-j, 0), min(ny-j-1, ny-1) + 1)
-                )
-
-            a1 = img1[s1]
-            a2 = img2[s2]
-
-            cc_ij = np.sum(a1 * a2)
-            cc[sxmax + i, symax + j] = cc_ij
-
-    cc /= norm
     cc = tools.roll_2d(cc)
     return cc
 
