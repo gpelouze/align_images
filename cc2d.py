@@ -170,7 +170,7 @@ def explicit(img1, img2, sxmax, symax):
             cc[sxmax + i, symax + j] = cc_ij
 
     cc /= norm
-
+    cc = tools.roll_2d(cc)
     return cc
 
 def dft(img1, img2, boundary='wrap'):
@@ -235,5 +235,5 @@ def scipy(img1, img2, boundary='fill'):
         )
 
     cc /= norm
-
+    cc = tools.roll_2d(cc)
     return cc
