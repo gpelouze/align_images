@@ -209,6 +209,10 @@ def dft(img1, img2, boundary='wrap'):
             np.fft.fft2(a1)
             )
 
+    else:
+        msg = "unexpected value for 'boundary': {}".format(boundary)
+        raise ValueError(msg)
+
     cc /= norm
 
     return cc.real
