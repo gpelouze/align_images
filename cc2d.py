@@ -29,7 +29,7 @@ import scipy.signal as ss
 
 from . import tools
 
-def _prep_for_cc(img1, img2):
+def _prep_for_cc(img1, img2, inplace=False):
     ''' Prepare img1 and img2 for cross correlation computation:
     - set average to 0
     - fill masked values with 0 (if masked array)
@@ -39,6 +39,9 @@ def _prep_for_cc(img1, img2):
     ==========
     img1, img2 : ndarray or masked array
         The 2D arrays to prepare
+    inplace : bool (default: False)
+        If True, don't copy the arrays before removing the average.
+        This saves time.
 
     Returns
     =======
@@ -47,8 +50,12 @@ def _prep_for_cc(img1, img2):
     norm : float
         The normalisation for these arrays
     '''
-    a1 = img1.copy()
-    a2 = img2.copy()
+    if not inplace:
+        a1 = img1.copy()
+        a2 = img2.copy()
+    else:
+        a1 = img1
+        a2 = img2
     a1 -= a1.mean()
     a2 -= a2.mean()
     try:
