@@ -184,21 +184,27 @@ def explicit_step(a1, a2, i, j, norm=None):
 
     return np.sum(a1 * a2) / norm
 
-def explicit(img1, img2, sxmax, symax, boundary='fill'):
+def explicit(img1, img2, sxmax=None, symax=None, boundary='fill'):
     ''' Compute the cross-correlation of img1 and img2 using explicit
     multiplication in the real space.
 
     Parameters
     ==========
     img1, img2 : ndarray
-    sxmax, symax : int
+    sxmax, symax : int or None (default: None)
         The maximum shift on the x and y axes resp. for which to compute the
         cross-correlation.
+        If None, compute the cross correlation over the full shift domain.
     boundary : 'fill' or 'drop' (default: 'fill')
         How to handle boundary conditions. 'fill' is equivalent to padding the
         images with zeros. With 'drop' the cross-correlation is computing using
         only the overlapping part of the images.
     '''
+    ny, nx = img1.shape
+    if sxmax is None:
+        sxmax = nx
+    if symax is None:
+        symax = ny
 
     if boundary == 'fill':
         img1, img2, norm = _prep_for_cc(img1, img2)
