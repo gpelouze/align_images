@@ -56,6 +56,10 @@ def _prep_for_cc(img1, img2, inplace=False):
     else:
         a1 = img1
         a2 = img2
+    if np.issubdtype(a1.dtype, np.integer):
+        a1 = a1.astype(float)
+    if np.issubdtype(a2.dtype, np.integer):
+        a2 = a2.astype(float)
     a1 -= a1.mean()
     a2 -= a2.mean()
     try:
