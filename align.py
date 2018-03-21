@@ -31,7 +31,8 @@ from . import tools
 from . import cc2d
 
 def track(img1, img2,
-        sub_px=True, missing=None, cc_function='dft', cc_boundary='wrap'):
+        sub_px=True, missing=None, cc_function='dft', cc_boundary='wrap',
+        **kwargs):
     ''' Return the shift between img1 and img2 by computing their cross
     correlation.
 
@@ -54,6 +55,8 @@ def track(img1, img2,
     cc_boundary : str or None (default: None)
         If not None, pass this value as the `boundary` keyword to cc_function.
         See cc_function documentation for accepted values.
+    **kwargs :
+        Passed to cc_function.
 
     Returns
     =======
@@ -86,9 +89,9 @@ def track(img1, img2,
         }
     cc_function = cc_functions[cc_function]
     if cc_boundary:
-        cc = cc_function(img1, img2, boundary=cc_boundary)
+        cc = cc_function(img1, img2, boundary=cc_boundary, **kwargs)
     else:
-        cc = cc_function(img1, img2)
+        cc = cc_function(img1, img2, **kwargs)
     cc = tools.roll_2d(cc, shift_i=sy, shift_j=sx)
 
     maxcc = np.max(cc)
