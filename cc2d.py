@@ -184,7 +184,7 @@ def explicit_step(a1, a2, i, j, norm=None):
     a2 = a2[s2]
 
     if norm is None:
-        a1, a2, norm = _prep_for_cc(a1, a2, inplace=True)
+        a1, a2, norm = _prep_for_cc(a1, a2)
 
     return np.sum(a1 * a2) / norm
 
