@@ -23,6 +23,7 @@ using it!
 
 import functools
 import multiprocessing as mp
+import warnings
 
 import numpy as np
 import scipy.interpolate as si
