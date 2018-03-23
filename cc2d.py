@@ -2,11 +2,17 @@
 
 ''' A set of methods for computing the cross-correlation of 2D images.
 
-Currently, 3 methods are provided for computing the cross-correlation:
+Currently, 3 methods are provided for computing the cross-correlation (CC),
+each implementing different boundary conditions:
 
 - explicit: multiplication in the real space.
 - dft: multiplication in the real Fourier space.
 - scipy: a wrapper around scipy.signal.correlate2d
+
+While explicit(boundary='drop') is far less sensitive to edge effects than
+dft(), it is also much slower. If a full CC map is not required,
+explicit_minimize() can instead be used to locate the CC maximum within a
+reasonable computation time.
 
 For any method, let img1 and img2 the entry images. We first subtract their
 respective averages:
@@ -26,6 +32,8 @@ The cross-correlation returned by the method is:
 
 import numpy as np
 import scipy.signal as ss
+import scipy.optimize as sio
+import scipy.interpolate as si
 
 from . import tools
 
@@ -148,7 +156,7 @@ def _unpad_array(arr, s, roll=False):
 
 def explicit_step(a1, a2, i, j, norm=None):
     ''' Compute the explicit cross-correlation between two arrays for a given
-    shift.
+    integer shift.
 
     Parameters
     ==========
@@ -188,6 +196,34 @@ def explicit_step(a1, a2, i, j, norm=None):
 
     return np.sum(a1 * a2) / norm
 
+def explicit_step_float(a1, a2, i, j, norm=None):
+    ''' Compute the explicit cross-correlation between two arrays for an
+    arbitrary float shift.
+
+    This is done by evaluating explicit_step() at the four surrounding integer
+    shifts, and by interpolating the results.
+
+    Parameters
+    ==========
+    a1, a2 : ndarray, 2D
+        Data values.
+    i, j : float
+        The shift between a1 and a2 for which to compute the cross-correlation.
+    norm : passed to explicit_step()
+
+    Returns
+    =======
+    cc : float
+        The cross-correlation of a1 with a2 for shift (i, j)
+    '''
+    i0 = int(np.floor(i))
+    j0 = int(np.floor(j))
+    I = [i0, i0, i0+1, i0+1]
+    J = [j0, j0+1, j0, j0+1]
+    CC = [explicit_step(a1, a2, ii, jj, norm=norm) for ii, jj in zip(I, J)]
+    s = si.interp2d(I, J, CC)
+    return s(i, j)
+
 def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
     ''' Compute the cross-correlation of img1 and img2 using explicit
     multiplication in the real space.
@@ -226,6 +262,33 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
                 img1, img2, i, j, norm=norm)
 
     return cc
+
+def explicit_minimize(img1, img2, x0=(0, 0), norm=None, **kwargs):
+    ''' Find the position of the cross-correlation maximum between two images.
+
+    The maximum is found using scipy.optimize.minimize to minimize the opposite
+    of the cross-correlation of img1 with img2, computed through
+    explicit_step_float(). Refer to the `scipy.optimize.minimize` documentation
+    for the available optimisation methods.
+
+    Parameters
+    ==========
+    img1, img2 : ndarray
+        Data values
+    x0 : tuple of float or None (default: (0, 0))
+        Initial guess.
+    norm : passed to explicit_step_float
+    **kwargs : passed to scipy.optimize.minimize
+
+    Returns
+    =======
+    res : OptimizeResult
+        The result from scipy.optimize.minimize
+    '''
+    def cost_function(x):
+        return - explicit_step_float(img1, img2, *x, norm=norm)
+    popt = sio.minimize(cost_function, x0, **kwargs)
+    return popt
 
 def dft(img1, img2, boundary='wrap'):
     ''' Compute the cross-correlation of img1 and img2 using multiplication in
