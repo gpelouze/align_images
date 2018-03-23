@@ -93,8 +93,8 @@ def _get_padding_slice(img):
     N = 2**np.ceil(np.log2(n * 2))
     N = N.astype(int)
     im = np.zeros(N[0])
-    nmin = N//2 - n//2
-    nmax = N//2 + n//2 + n%2
+    nmin = N//2 - n//2 - n%2
+    nmax = N//2 + n//2
     s = (slice(nmin[0], nmax[0]), slice(nmin[1], nmax[1]))
     return s, N
 
@@ -219,13 +219,12 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
         msg = "unexpected value for 'boundary': {}".format(boundary)
         raise ValueError(msg)
 
-    cc = np.zeros((2 * simax + 1, 2 * sjmax + 1))
-    for i in range(-simax, simax + 1):
-        for j in range(-sjmax, sjmax + 1):
-            cc[simax + i, sjmax + j] = explicit_step(
+    cc = np.zeros((2*simax + ni%2, 2*sjmax + nj%2))
+    for i in range(-simax - 1, simax):
+        for j in range(-sjmax - 1, sjmax):
+            cc[i, j] = explicit_step(
                 img1, img2, i, j, norm=norm)
 
-    cc = tools.roll_2d(cc)
     return cc
 
 def dft(img1, img2, boundary='wrap'):
@@ -294,5 +293,7 @@ def scipy(img1, img2, boundary='fill'):
         )
 
     cc /= norm
-    cc = tools.roll_2d(cc)
+    shift_i = cc.shape[0] // 2 + 1
+    shift_j = cc.shape[1] // 2 + 1
+    cc = tools.roll_2d(cc, shift_i, shift_j)
     return cc
