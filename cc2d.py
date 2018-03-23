@@ -198,7 +198,8 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
     simax, sjmax : int or None (default: None)
         The maximum shift on the 0 and 1 axes resp. for which to compute the
         cross-correlation.
-        If None, compute the cross correlation over the full shift domain.
+        If None, return a cross-correlation map with the same size of the input
+        images.
     boundary : 'fill' or 'drop' (default: 'fill')
         How to handle boundary conditions. 'fill' is equivalent to padding the
         images with zeros. With 'drop' the cross-correlation is computing using
@@ -206,9 +207,9 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
     '''
     ni, nj = img1.shape
     if simax is None:
-        simax = ni - 1
+        simax = ni // 2
     if sjmax is None:
-        sjmax = nj - 1
+        sjmax = nj // 2
 
     if boundary == 'fill':
         img1, img2, norm = _prep_for_cc(img1, img2)
