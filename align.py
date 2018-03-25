@@ -95,7 +95,7 @@ def track(img1, img2,
         cc = cc_function(img1, img2, **kwargs)
     cc = tools.roll_2d(cc, shift_i=sy, shift_j=sx)
 
-    maxcc = np.max(cc)
+    maxcc = np.nanmax(cc)
     cy, cx = np.where(cc == maxcc)
     if not(len(cy) == 1 and len(cx) == 1):
         m = 'Could not find a unique cross correlation maximum.'
@@ -122,12 +122,12 @@ def track(img1, img2,
         xn = ccx2[2] - ccx2[1]
         xd = ccx2[0] - 2 * ccx2[1] + ccx2[2]
 
-        if yd != 0:
+        if yd != 0 and not np.isnan(yd):
             offset[0] = yi[2] - yn / yd - 0.5
         else:
             offset[0] = float(cy)
 
-        if xd != 0:
+        if xd != 0 and not np.isnan(xd):
             offset[1] = xi[2] - xn / xd - 0.5
         else:
             offset[1] = float(cx)
