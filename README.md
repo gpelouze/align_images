@@ -2,9 +2,11 @@
 # Align images
 
 Collection of tools to align series of images containing the same subject, such
-as astronomical data.
+as astronomical data. :milky_way:
 
 ## Usage
+
+### Align a series of images
 
 The alignment is done using two different functions in `align`:
 
@@ -26,7 +28,7 @@ before using it!
 
 See the functions documentation for more informations.
 
-## Example
+**Example**
 
 ~~~python
 from astropy.io import fits
@@ -37,6 +39,47 @@ shifts = align.compute_shifts(cube, ref_frame=cube[0])
 aligned_cube = align.align_cube(cube, shifts, processes=4)
 tools.save_fits_cube(aligned_cube, 'aligned_data.fits')
 ~~~
+
+### Determine the shift between two images
+
+The shift between two images is determined computing their 2D
+cross-correlation (CC), and finding the location its maximum. This is performed by
+`align.track()`, which calls the appropriate function from `cc2d`, depending on
+the required method.
+
+Currently, 3 methods are provided by `cc2d` for computing the (CC), each
+implementing different boundary conditions:
+
+- `explicit()`: multiplication in the real space.
+- `dft()`: multiplication in the real Fourier space.
+- `scipy()`: a wrapper around `scipy.signal.correlate2d`.
+
+While `explicit(boundary='drop')` is far less sensitive to edge effects than
+`dft()`, it is also much slower. If a full CC map is not required,
+`explicit_minimize()` can instead be used to locate the CC maximum within a
+reasonable computation time.
+
+**Normalization**
+
+For any method, let `img1` and `img2` the entry images. We first subtract their
+respective averages:  
+*I* = `img1` - avg(`img1`),  
+*J* = `img2` - avg(`img2`).
+
+Then compute the normalisation factor, which is the product of the standard
+deviations of *I* and *J*:  
+*norm* = σ(*I*) × σ(*J*) = sqrt(sum(*I²*) × sum(*J²*)).
+
+The cross-correlation returned by the method is normalized by this factor, such
+that its maximum is 1:  
+*cc = I ⋆ J / norm*.
+
+
+### Miscellaneous tools
+
+The submodule `tools` contains various functions either required by `align` and
+`cc2d`, or that can be used to manipulate the images before they are aligned.
+
 
 ## License
 
