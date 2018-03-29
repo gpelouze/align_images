@@ -283,10 +283,14 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill', cores=None):
     else:
         p = mp.Pool(cores)
         try:
+            n_iter = (2*simax + ni%2) * (2*sjmax + nj%2)
+            chunksize, extra = divmod(n_iter, len(p._pool))
+            if extra:
+                chunksize += 1
             cc = p.starmap(
                 functools.partial(explicit_step, img1, img2, norm=norm),
                 itertools.product(range(-simax, simax), range(-sjmax, sjmax)),
-                chunksize=1)
+                chunksize=chunksize)
         finally:
             p.terminate()
     cc = np.array(cc)
