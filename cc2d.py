@@ -32,6 +32,7 @@ The cross-correlation returned by the method is:
 
 import functools
 import itertools
+import multiprocessing as mp
 
 import numpy as np
 import scipy.signal as ss
@@ -227,7 +228,7 @@ def explicit_step_float(a1, a2, i, j, norm=None):
     s = si.interp2d(I, J, CC)
     return s(i, j)
 
-def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
+def explicit(img1, img2, simax=None, sjmax=None, boundary='fill', cores=None):
     ''' Compute the cross-correlation of img1 and img2 using explicit
     multiplication in the real space.
 
@@ -243,6 +244,9 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
         How to handle boundary conditions. 'fill' is equivalent to padding the
         images with zeros. With 'drop' the cross-correlation is computing using
         only the overlapping part of the images.
+    cores : int or None (default: None)
+        If not None, use multiprocessing to compute the steps using the
+        specified number processes.
     '''
     ni, nj = img1.shape
     if simax is None:
@@ -258,11 +262,21 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
         msg = "unexpected value for 'boundary': {}".format(boundary)
         raise ValueError(msg)
 
-    cc = itertools.starmap(
-        functools.partial(explicit_step, img1, img2, norm=norm),
-        itertools.product(range(-simax, simax), range(-sjmax, sjmax)),
-        )
-    cc = list(cc)
+    if cores is None:
+        cc = itertools.starmap(
+            functools.partial(explicit_step, img1, img2, norm=norm),
+            itertools.product(range(-simax, simax), range(-sjmax, sjmax)),
+            )
+        cc = list(cc)
+    else:
+        p = mp.Pool(cores)
+        try:
+            cc = p.starmap(
+                functools.partial(explicit_step, img1, img2, norm=norm),
+                itertools.product(range(-simax, simax), range(-sjmax, sjmax)),
+                chunksize=1)
+        finally:
+            p.terminate()
     cc = np.array(cc)
     cc = cc.reshape(2*simax + ni%2, 2*sjmax + nj%2)
     cc = tools.roll_2d(cc)
