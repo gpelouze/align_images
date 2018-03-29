@@ -204,8 +204,8 @@ def explicit_step(a1, a2, i, j, norm=None):
     except AttributeError:
         mask2 = np.zeros_like(a2, dtype=bool)
     mask = mask1 | mask2
-    a1m = np.ma.array(a1, mask=mask)
-    a2m = np.ma.array(a2, mask=mask)
+    a1 = np.ma.array(a1, mask=mask)
+    a2 = np.ma.array(a2, mask=mask)
 
     if norm is None:
         a1, a2, norm = _prep_for_cc(a1, a2)
