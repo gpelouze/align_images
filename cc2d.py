@@ -30,6 +30,9 @@ The cross-correlation returned by the method is:
 
 '''
 
+import functools
+import itertools
+
 import numpy as np
 import scipy.signal as ss
 import scipy.optimize as sio
@@ -255,11 +258,14 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
         msg = "unexpected value for 'boundary': {}".format(boundary)
         raise ValueError(msg)
 
-    cc = np.zeros((2*simax + ni%2, 2*sjmax + nj%2))
-    for i in range(-simax, simax):
-        for j in range(-sjmax, sjmax):
-            cc[i, j] = explicit_step(
-                img1, img2, i, j, norm=norm)
+    cc = itertools.starmap(
+        functools.partial(explicit_step, img1, img2, norm=norm),
+        itertools.product(range(-simax, simax), range(-sjmax, sjmax)),
+        )
+    cc = list(cc)
+    cc = np.array(cc)
+    cc = cc.reshape(2*simax + ni%2, 2*sjmax + nj%2)
+    cc = tools.roll_2d(cc)
 
     return cc
 
