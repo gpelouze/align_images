@@ -210,7 +210,10 @@ def explicit_step(a1, a2, i, j, norm=None):
     if norm is None:
         a1, a2, norm = _prep_for_cc(a1, a2)
 
-    return np.sum(a1 * a2) / norm
+    if norm == 0:
+        return np.nan
+    else:
+        return np.sum(a1 * a2) / norm
 
 def explicit_step_float(a1, a2, i, j, norm=None):
     ''' Compute the explicit cross-correlation between two arrays for an
