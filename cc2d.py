@@ -256,8 +256,8 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill'):
         raise ValueError(msg)
 
     cc = np.zeros((2*simax + ni%2, 2*sjmax + nj%2))
-    for i in range(-simax - 1, simax):
-        for j in range(-sjmax - 1, sjmax):
+    for i in range(-simax, simax):
+        for j in range(-sjmax, sjmax):
             cc[i, j] = explicit_step(
                 img1, img2, i, j, norm=norm)
 
