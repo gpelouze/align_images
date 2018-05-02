@@ -33,6 +33,7 @@ from . import cc2d
 
 def track(img1, img2,
         sub_px=True, missing=None, cc_function='dft', cc_boundary='wrap',
+        return_full_cc=False,
         **kwargs):
     ''' Return the shift between img1 and img2 by computing their cross
     correlation.
@@ -56,6 +57,9 @@ def track(img1, img2,
     cc_boundary : str or None (default: None)
         If not None, pass this value as the `boundary` keyword to cc_function.
         See cc_function documentation for accepted values.
+    return_full_cc : bool (default: False)
+        If True, return the full cross-correlation array.
+        If False, only return the maximum cross-correlation.
     **kwargs :
         Passed to cc_function.
 
@@ -63,8 +67,10 @@ def track(img1, img2,
     =======
     offset : ndarray
         An array containing the optimal (y, x) offset between the input images
-    maxcc : float
-        The value of the correlation at the optimal offset.
+    cc : float or 3D array
+        Depending on the value of return_full_cc, either the value of the
+        cross-correlation at the optimal offset, or the full cross-correlation
+        array.
     '''
 
     assert img1.shape == img2.shape, 'Images must have the same shape.'
@@ -135,7 +141,10 @@ def track(img1, img2,
     offset[0] = sy - offset[0]
     offset[1] = sx - offset[1]
 
-    return offset, maxcc
+    if return_full_cc:
+        return offset, cc
+    else:
+        return offset, maxcc
 
 def compute_shifts(cube, ref_frame=None, processes=1, **kwargs):
     ''' Compute the shifts between each frame of a cube.
