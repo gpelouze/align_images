@@ -4,6 +4,17 @@
 Collection of tools to align series of images containing the same subject, such
 as astronomical data. :milky_way:
 
+## Installation
+
+Clone the repository (or download the sources), and install with pip:
+
+~~~
+git clone https://github.com/gpelouze/align_images
+cd align_images
+pip install .
+~~~
+
+
 ## Usage
 
 ### Align a series of images
