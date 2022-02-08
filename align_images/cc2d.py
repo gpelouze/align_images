@@ -262,9 +262,15 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill', cores=None):
     '''
     ni, nj = img1.shape
     if simax is None:
-        simax = ni // 2
+        simin = - ni // 2
+        simax = + ni // 2
+    else:
+        simin = - simax
     if sjmax is None:
-        sjmax = nj // 2
+        sjmin = - nj // 2
+        sjmax = + nj // 2
+    else:
+        sjmin = - sjmax
 
     if boundary == 'fill':
         img1, img2, norm = _prep_for_cc(img1, img2)
@@ -274,12 +280,14 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill', cores=None):
         msg = "unexpected value for 'boundary': {}".format(boundary)
         raise ValueError(msg)
 
-    ni, nj = 2*simax, 2*sjmax
+    worker = functools.partial(explicit_step, img1, img2, norm=norm)
+    i_range = range(simin, simax)
+    j_range = range(sjmin, sjmax)
+    ni = len(i_range)
+    nj = len(j_range)
+    iterable = itertools.product(i_range, j_range)
     if cores is None:
-        cc = itertools.starmap(
-            functools.partial(explicit_step, img1, img2, norm=norm),
-            itertools.product(range(-simax, simax), range(-sjmax, sjmax)),
-            )
+        cc = itertools.starmap(worker, iterable)
         cc = list(cc)
     else:
         p = mp.Pool(cores)
@@ -288,10 +296,7 @@ def explicit(img1, img2, simax=None, sjmax=None, boundary='fill', cores=None):
             chunksize, extra = divmod(n_iter, len(p._pool))
             if extra:
                 chunksize += 1
-            cc = p.starmap(
-                functools.partial(explicit_step, img1, img2, norm=norm),
-                itertools.product(range(-simax, simax), range(-sjmax, sjmax)),
-                chunksize=chunksize)
+            cc = p.starmap(worker, iterable, chunksize=chunksize)
         finally:
             p.terminate()
     cc = np.array(cc)
