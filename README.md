@@ -94,7 +94,7 @@ The submodule `tools` contains various functions either required by `align` and
 
 ## License
 
-Copyright (c) 2018 Gabriel Pelouze
+Copyright (c) 2022 Gabriel Pelouze
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
