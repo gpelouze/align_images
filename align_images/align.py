@@ -253,7 +253,7 @@ def align_frame(frame, shift, points_old, grid_new, points_new, method):
 
     return values_new
 
-def align_cube(cube, shifts, method='nearest', processes=1):
+def align_cube(cube, shifts, method='nearest', ref_frame=None, processes=1):
     ''' Project a cube where each slice is shifted by a factor that needs to be
     corrected.
 
@@ -269,6 +269,10 @@ def align_cube(cube, shifts, method='nearest', processes=1):
         correction to apply to the corresponding axis of the cube.
     method : str (default: 'nearest')
         Interpolation method, passed to scipy.interpolate.griddata().
+    ref_frame : int or None (default: None)
+        If not None, the cube is aligned relatively to the specified frame.
+        If None, new coordinates are chosen such that all offset frames fit
+        within the new cube.
     processes : int (default: 1)
         The number of processes to use.
 
@@ -282,10 +286,14 @@ def align_cube(cube, shifts, method='nearest', processes=1):
 
     # chose x and y bounds such the new array covers all the area covered by
     # the shifted slices of the input array
-    xmin, ymin = - np.ceil(np.max(shifts, axis=0))
-    xmax, ymax = - np.ceil(np.min(shifts, axis=0)) + (xmax_old, ymax_old)
-    xmin, ymin = int(xmin), int(ymin)
-    xmax, ymax = int(xmax), int(ymax)
+    if ref_frame is None:
+        xmin, ymin = - np.ceil(np.max(shifts, axis=0))
+        xmax, ymax = - np.ceil(np.min(shifts, axis=0)) + (xmax_old, ymax_old)
+        xmin, ymin = int(xmin), int(ymin)
+        xmax, ymax = int(xmax), int(ymax)
+    else:
+        xmin, ymin = 0, 0
+        xmax, ymax = xmax_old, ymax_old
 
     # prepare new and old points for si.griddata
 
@@ -295,6 +303,10 @@ def align_cube(cube, shifts, method='nearest', processes=1):
         np.arange(ymin, ymax),
         )
     points_new = np.array([g.flatten() for g in grid_new]).T
+
+    # shift shifts (:D) to make them relative to ref_frame
+    if ref_frame is not None:
+        shifts = [s - shifts[ref_frame] for s in shifts]
 
     # prepare old points adding a 1 px nan border to mitigate si.griddata with
     # method='nearest' behaviour
