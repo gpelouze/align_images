@@ -7,7 +7,7 @@ with open('requirements.txt', 'r') as f:
 
 setuptools.setup(
     name='align_images',
-    version='2018.5.2',
+    version='2022.7.11',
     author='Gabriel Pelouze',
     author_email='gabriel@pelouze.net',
     description='Align images containing the same subject.',
